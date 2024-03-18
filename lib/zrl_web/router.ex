@@ -4,20 +4,71 @@ defmodule ZrlWeb.Router do
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
-    plug :fetch_live_flash
-    plug :put_root_layout, html: {ZrlWeb.Layouts, :root}
+    plug :fetch_flash
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug(ZrlWeb.Plugs.SetUser)
+    plug(ZrlWeb.Plugs.SessionTimeout, timeout_after_seconds: 10_000)
   end
 
   pipeline :api do
     plug :accepts, ["json"]
   end
 
+  pipeline :session do
+    plug(:accepts, ["html"])
+    plug(:fetch_session)
+    plug(:fetch_flash)
+    plug(:put_secure_browser_headers)
+  end
+
+  pipeline :app do
+    plug(:put_layout, {ZrlWeb.LayoutView, :app})
+  end
+
+  pipeline :no_layout do
+    plug :put_layout, false
+  end
+
   scope "/", ZrlWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    get "/create/user", UserController, :new
+    post "/create/user", UserController, :create
+    get("/system/users", UserController, :index)
+    get("/update/user", UserController, :edit)
+    post("/update/user", UserController, :update)
+    get("/change/user/password", UserController, :new_password)
+    post("/change/user/password", UserController, :change_password)
+    get("/user/activity/logs", UserController, :user_logs)
+    post("/change/user/status", UserController, :change_user_status)
+    get("/view/user/activities", UserController, :user_logs)
+    get("/repair/users", UserController, :repair_users)
+    get("/dashboard", UserController, :dashboard)
+    post("/show/user", UserController, :show)
+    post("/show/user/signture", UserController, :view_signture)
+    post("/admin/assign/loco/driver", LocoDriverController, :create)
+    get("/admin/assign/loco/driver", LocoDriverController, :create)
+    get("/view/loco/drivers", LocoDriverController, :index)
+    post("/change/loco/driver/status", LocoDriverController, :change_status)
+    delete("/delete/loco/driver", LocoDriverController, :delete)
+  end
+
+  scope "/", ZrlWeb do
+    pipe_through([:session])
+    get("/forgort/password", UserController, :forgot_password)
+    post("/confirmation/token", UserController, :token)
+    get("/reset/password", UserController, :reset_password)
+    post("/reset/password", UserController, :reset_password)
+    get("/token/verification", SessionController, :entrust_token)
+    post("/token/verification", SessionController, :confirm_token)
+    get("/", SessionController, :new)
+    post("/", SessionController, :create)
+  end
+
+  scope "/", ZrlWeb do
+    pipe_through([:browser])
+    get("/signout", SessionController, :signout)
   end
 
   # Other scopes may use custom stacks.
