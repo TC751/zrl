@@ -67,6 +67,31 @@ defmodule ZrlWeb.Router do
   end
 
   scope "/", ZrlWeb do
+    pipe_through([:browser, :app])
+
+    get "/view/user/regions", UserRegionController, :index
+    get "/new/user/region", UserRegionController, :new
+    post "/new/user/region", UserRegionController, :create
+    get "/update/user/:id/region", UserRegionController, :edit
+    post "/update/user/region", UserRegionController, :update
+    # get "/system/user/region", UserRegionController, :index
+    delete "/delete/user/region", UserRegionController, :delete
+    post "/change/user/region/status", UserRegionController, :change_status
+  end
+
+  scope "/", ZrlWeb do
+    pipe_through([:browser, :app])
+
+    get("/view/company/infomation", CompanyInfoController, :index)
+    get("/new/company/infomation", CompanyInfoController, :new)
+    post("/new/company/infomation", CompanyInfoController, :create)
+    get("/update/company/infomation", CompanyInfoController, :edit)
+    post("/update/company/infomation", CompanyInfoController, :update)
+    post("/change/company/infomation/status", CompanyInfoController, :change_status)
+    delete("/delete/company/infomation", CompanyInfoController, :delete)
+  end
+
+  scope "/", ZrlWeb do
     pipe_through([:browser])
     get("/signout", SessionController, :signout)
   end
