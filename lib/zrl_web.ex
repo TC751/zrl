@@ -1,106 +1,74 @@
 defmodule ZrlWeb do
   @moduledoc """
   The entrypoint for defining your web interface, such
-  as controllers, components, channels, and so on.
-
+  as controllers, views, channels and so on.
+  
   This can be used in your application as:
-
+  
       use ZrlWeb, :controller
-      use ZrlWeb, :html
-
-  The definitions below will be executed for every controller,
-  component, etc, so keep them short and clean, focused
+      use ZrlWeb, :view
+  
+  The definitions below will be executed for every view,
+  controller, etc, so keep them short and clean, focused
   on imports, uses and aliases.
-
+  
   Do NOT define functions inside the quoted expressions
-  below. Instead, define additional modules and import
-  those modules here.
+  below. Instead, define any helper function in modules
+  and import those modules here.
   """
 
-  def static_paths, do: ~w(assets fonts images favicon.ico robots.txt)
+  def controller do
+    quote do
+      use Phoenix.Controller, namespace: ZrlWeb
+
+      import Plug.Conn
+      import ZrlWeb.Gettext
+      alias ZrlWeb.Router.Helpers, as: Routes
+    end
+  end
+
+  def view do
+    quote do
+      use Phoenix.View,
+        root: "lib/zrl_web/templates",
+        namespace: ZrlWeb
+
+      # Import convenience functions from controllers
+      import Phoenix.Controller,
+        only: [get_flash: 1, get_flash: 2, view_module: 1, view_template: 1]
+
+      # Include shared imports and aliases for views
+      unquote(view_helpers())
+    end
+  end
 
   def router do
     quote do
-      use Phoenix.Router, helpers: false
+      use Phoenix.Router
 
-      # Import common connection and controller functions to use in pipelines
       import Plug.Conn
       import Phoenix.Controller
-      import Phoenix.LiveView.Router
     end
   end
 
   def channel do
     quote do
       use Phoenix.Channel
-    end
-  end
-
-  def controller do
-    quote do
-      use Phoenix.Controller,
-        formats: [:html, :json],
-        layouts: [html: ZrlWeb.Layouts]
-
-      import Plug.Conn
       import ZrlWeb.Gettext
-
-      unquote(verified_routes())
     end
   end
 
-  def live_view do
+  defp view_helpers do
     quote do
-      use Phoenix.LiveView,
-        layout: {ZrlWeb.Layouts, :app}
+      # Use all HTML functionality (forms, tags, etc)
+      use Phoenix.HTML
 
-      unquote(html_helpers())
-    end
-  end
+      # Import basic rendering functionality (render, render_layout, etc)
+      import Phoenix.View
 
-  def live_component do
-    quote do
-      use Phoenix.LiveComponent
-
-      unquote(html_helpers())
-    end
-  end
-
-  def html do
-    quote do
-      use Phoenix.Component
-
-      # Import convenience functions from controllers
-      import Phoenix.Controller,
-        only: [get_csrf_token: 0, view_module: 1, view_template: 1]
-
-      # Include general helpers for rendering HTML
-      unquote(html_helpers())
-    end
-  end
-
-  defp html_helpers do
-    quote do
-      # HTML escaping functionality
-      import Phoenix.HTML
-      # Core UI components and translation
-      import ZrlWeb.CoreComponents
+      import ZrlWeb.ErrorHelpers
       import ZrlWeb.Gettext
-
-      # Shortcut for generating JS commands
-      alias Phoenix.LiveView.JS
-
-      # Routes generation with the ~p sigil
-      unquote(verified_routes())
-    end
-  end
-
-  def verified_routes do
-    quote do
-      use Phoenix.VerifiedRoutes,
-        endpoint: ZrlWeb.Endpoint,
-        router: ZrlWeb.Router,
-        statics: ZrlWeb.static_paths()
+      alias ZrlWeb.Router.Helpers, as: Routes
     end
   end
 
